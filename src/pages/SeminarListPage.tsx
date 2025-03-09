@@ -1,53 +1,70 @@
-import { useEffect, useState } from "react"
-import { SeminarList } from "../components/SeminarList"
-import { fetchDeleteSeminar, fetchSeminars } from "../api/seminarsApi"
-import { TSeminar } from "../types"
-import { LayoutPage } from "../components/LayoutPage"
-import { EditSeminarModal } from "../components/EditSeminarModal"
-import { ConfirmModal } from "../components/ConfirmModal"
+import { useEffect, useState } from 'react';
+import { SeminarList } from '../components/SeminarList';
+import {
+  fetchDeleteSeminar,
+  fetchSeminars,
+  fetchUpdateSeminar,
+} from '../api/seminarsApi';
+import { TSeminar } from '../types';
+import { LayoutPage } from '../components/LayoutPage';
+import { SeminarFormModal } from '../components/SeminarFormModal';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export const SeminarListPage = () => {
+  const [seminars, setSeminars] = useState<TSeminar[]>([]); //массив с семинарами
+  const [editedSeminar, setEditedSeminar] = useState(''); //выбранный id семинара для редактирования
+  const [deletedSeminar, setDeletedSeminar] = useState(''); //выбранный id семинара для удаления
 
-    const [seminars, setSeminars] = useState<TSeminar[]>([]) //массив с семинарами
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false) //состояние модалки подтверждения удаления
-    const [seminarSelected, setSeminarSelected] = useState<TSeminar | null>(null) //выбранный семинар
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false) //состояние модалки редактирования
+  useEffect(() => {
+    fetchSeminars().then((data) => setSeminars(data)); //получаем данные семинаров с сервера
+  }, [seminars]);
 
-    // получение массива с семинарами с сервера
-    useEffect(() => {
-        fetchSeminars().then(data => setSeminars(data))
-    },[seminars])
+  //функция выбора семинара для редактирования
+  const handleEdit = (id: string) => {
+    setEditedSeminar(id);
+  };
+  //функция выбора семинара для удаления
+  const handleDelete = (id: string) => {
+    setDeletedSeminar(id);
+  };
+  //функция сохранения отредактированного семинара
+  const handleSave = (d: TSeminar) => {
+    fetchUpdateSeminar(d.id, d);
+    setEditedSeminar('');
+  };
+  //функция подтверждения удаления семинара
+  const handleConfirm = (d: TSeminar) => {
+    fetchDeleteSeminar(d.id);
+    setDeletedSeminar('');
+  };
 
-    //функция удаления семинара
-    const handleDelete = (id:string) => {
-        fetchDeleteSeminar(id) // удаление семинара с сервера
-        setSeminars(seminars.filter(seminar => seminar.id !== id)) // обновление списка семинаров
-        setIsConfirmModalOpen(false) // закрытие модалки подтверждения удаления
-    }
+  const seminar = seminars.find((el) => el.id === editedSeminar); //выбранный семинар для редактирования
+  const deleteSeminar = seminars.find((el) => el.id === deletedSeminar); //выбранный семинар для удаления
 
-    return (
-        <div>
-            <LayoutPage>
-                {seminars.map(seminar => (
-                    <SeminarList 
-                    data={seminars}
-                    onDelete={() => {
-                        setIsConfirmModalOpen(true);
-                        setSeminarSelected(seminar)
-                    }}
-                    onEdit={() => {
-                        setIsEditModalOpen(true);
-                        setSeminarSelected(seminar)
-                    }}
-            />
-                ))}
-                
-            </LayoutPage>
-            <ConfirmModal 
-                visible={isConfirmModalOpen}
-                onConfirm={() => handleDelete(seminarSelected.id)}
-                onClose={()=>setIsConfirmModalOpen(false)}
-                />
-        </div>
-    )
-}
+  return (
+    <LayoutPage>
+      <SeminarList
+        data={seminars}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {seminar && ( //если нажали на кнопку редактирования
+        <SeminarFormModal //отображается модальное окно
+          data={seminar}
+          open={!!editedSeminar}
+          onCancel={() => setEditedSeminar('')}
+          onEdit={handleSave}
+        />
+      )}
+      {deleteSeminar && ( //если нажали на кнопку удаления
+        <ConfirmModal //отображается модальное окно
+          data={deleteSeminar}
+          open={!!deletedSeminar}
+          onClose={() => setDeletedSeminar('')}
+          onConfirm={handleConfirm}
+        />
+      )}
+    </LayoutPage>
+  );
+};

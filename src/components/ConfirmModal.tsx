@@ -1,22 +1,25 @@
-import { Button, Modal } from 'antd'
-import { TConfirmModalProps } from '../types'
-
-export const ConfirmModal = ({visible, onConfirm, onClose}:TConfirmModalProps) => {
-    return (
-        <Modal 
-            title="Удалить семинар?"
-            open={visible}
-            footer={[
-                <Button key="submit" type="primary" onClick={onConfirm}>
-                    Да
-                </Button>,
-                <Button key="back" onClick={onClose}>
-                  Нет
-                </Button>
-              ]}
-            >
-            <Button onClick={onConfirm}>Да</Button>
-            <Button onClick={onClose}>Нет</Button>
-        </Modal>
-    )
-}
+import { Button, Modal } from 'antd';
+import { TConfirmModalProps } from '../types';
+//компонент модального окна для подтверждения удаления
+export const ConfirmModal = ({
+  data,
+  open,
+  onConfirm,
+  onClose,
+}: TConfirmModalProps) => {
+  return (
+    <Modal
+      title='Удалить семинар?'
+      open={open}
+      onCancel={onClose}
+      footer={[
+        <Button key='submit' type='primary' onClick={() => onConfirm(data)}>
+          Да
+        </Button>,
+        <Button key='back' onClick={onClose}>
+          Нет
+        </Button>,
+      ]}
+    ></Modal>
+  );
+};
